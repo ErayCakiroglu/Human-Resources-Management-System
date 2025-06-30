@@ -11,7 +11,7 @@ namespace HRMS.Entities.Concrete
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
-        public ICollection<Employee> Employees { get; set; }
-        public ICollection<Role> Roles { get; set; }
+        public ICollection<Employee> Employees { get; set; } = new List<Employee>();
+        public ICollection<DepartmentRole> DepartmentRoles { get; set; } = new List<DepartmentRole>();
     }
 }

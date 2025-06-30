@@ -10,9 +10,8 @@ namespace HRMS.Entities.Concrete
     public class Role : BaseEntity, IEntity
     {
         public int Id { get; set; }
-        public int DepartmentId { get; set; }
         public string RoleName { get; set; } = string.Empty;
-        public Department Department { get; set; }
-        public ICollection<Employee> Employees { get; set; }
+        public ICollection<Employee> Employees { get; set; } = new List<Employee>();
+        public ICollection<DepartmentRole> DepartmentRoles { get; set; } = new List<DepartmentRole>();
     }
 }
