@@ -1,4 +1,8 @@
+using HRMS.Business.Abstract;
+using HRMS.Business.Concrete;
+using HRMS.DataAccess.Abstract;
 using HRMS.DataAccess.Concrete;
+using HRMS.DataAccess.Concrete.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,6 +10,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddDbContext<HRMSDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<IEmployeeService, EmployeeManager>();
+builder.Services.AddScoped<IEmployeeDal, EfEmployeeDal>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
