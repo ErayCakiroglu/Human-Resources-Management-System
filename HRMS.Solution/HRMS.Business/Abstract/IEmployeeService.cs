@@ -1,10 +1,5 @@
 ﻿using HRMS.Core.Utilities;
 using HRMS.Entities.Concrete;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace HRMS.Business.Abstract
 {
@@ -15,5 +10,6 @@ namespace HRMS.Business.Abstract
         Result Delete(Employee employee);
         DataResult<Employee> GetById(int id);
         DataResult<List<Employee>> GetAll();
+        DataResult<List<Employee>> GetAllWithDetails();
     }
 }

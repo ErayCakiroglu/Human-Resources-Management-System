@@ -2,11 +2,6 @@
 using HRMS.Core.Utilities;
 using HRMS.DataAccess.Abstract;
 using HRMS.Entities.Concrete;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace HRMS.Business.Concrete
 {
@@ -67,5 +62,12 @@ namespace HRMS.Business.Concrete
             var employees = _employeeDal.GetAll();
             return new DataResult<List<Employee>>(employees, true, "Başarılı.");
         }
+
+        public DataResult<List<Employee>> GetAllWithDetails()
+        {
+            var employees = _employeeDal.GetAllWithDetails();
+            return new DataResult<List<Employee>>(employees, true, "Çalışanlar detaylarıyla getirildi.");
+        }
+
     }
 }

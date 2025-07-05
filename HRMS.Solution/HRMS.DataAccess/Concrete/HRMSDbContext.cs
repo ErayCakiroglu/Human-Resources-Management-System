@@ -1,10 +1,5 @@
 ﻿using HRMS.Entities.Concrete;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace HRMS.DataAccess.Concrete
 {
@@ -17,9 +12,9 @@ namespace HRMS.DataAccess.Concrete
         public DbSet<Employee> Employees { get; set; }
         public DbSet<Department> Departments { get; set; }
         public DbSet<Role> Roles { get; set; }
+        public DbSet<DepartmentRole> DepartmentRoles { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Global Query Filters (soft delete)
             modelBuilder.Entity<Employee>()
                 .HasQueryFilter(e => e.IsActive && !e.IsDeleted);
 
@@ -32,23 +27,11 @@ namespace HRMS.DataAccess.Concrete
             modelBuilder.Entity<DepartmentRole>()
                 .HasQueryFilter(dr => dr.IsActive && !dr.IsDeleted);
 
-            // Employee → Role (1 Role, birden fazla Employee)
             modelBuilder.Entity<Employee>()
-                .HasOne(e => e.Role)
-                .WithMany(r => r.Employees)
-                .HasForeignKey(e => e.RoleId)
+                .HasOne(e => e.DepartmentRole)
+                .WithMany(dr => dr.Employees)
+                .HasForeignKey(e => e.DepartmentRoleId)
                 .OnDelete(DeleteBehavior.NoAction);
-
-            // Employee → Department (1 Department, birden fazla Employee)
-            modelBuilder.Entity<Employee>()
-                .HasOne(e => e.Department)
-                .WithMany(d => d.Employees)
-                .HasForeignKey(e => e.DepartmentId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            // DepartmentRole: Many-to-Many (Department <-> Role)
-            modelBuilder.Entity<DepartmentRole>()
-                .HasKey(dr => new { dr.DepartmentId, dr.RoleId });
 
             modelBuilder.Entity<DepartmentRole>()
                 .HasOne(dr => dr.Department)
@@ -62,6 +45,5 @@ namespace HRMS.DataAccess.Concrete
 
             base.OnModelCreating(modelBuilder);
         }
-
     }
 }

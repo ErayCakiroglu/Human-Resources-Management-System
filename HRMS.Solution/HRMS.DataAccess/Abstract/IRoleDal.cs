@@ -3,8 +3,7 @@ using HRMS.Entities.Concrete;
 
 namespace HRMS.DataAccess.Abstract
 {
-    public interface IEmployeeDal : IEntityRepository<Employee>
+    public interface IRoleDal : IEntityRepository<Role>
     {
-        List<Employee> GetAllWithDetails();
     }
 }
