@@ -43,6 +43,10 @@ namespace HRMS.DataAccess.Concrete
                 .WithMany(r => r.DepartmentRoles)
                 .HasForeignKey(dr => dr.RoleId);
 
+            modelBuilder.Entity<Employee>()
+                .HasIndex(e => e.EmployeeCode)
+                .IsUnique();
+
             base.OnModelCreating(modelBuilder);
         }
     }
