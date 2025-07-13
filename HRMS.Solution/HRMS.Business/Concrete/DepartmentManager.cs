@@ -16,28 +16,31 @@ namespace HRMS.Business.Concrete
         public Result Add(Department department)
         {
             if (_departmentDal.Any(d => d.Name == department.Name))
-                return new Result(false, "Bu departman adına sahip departman bulunuyor.");
+                return new Result(false, "There is a department with this department name.");
 
             _departmentDal.Add(department);
-            return new Result(true, "Departman başarıyla eklendi.");
+            return new Result(true, "Department added successfully.");
         }
 
         public Result Delete(Department department)
         {
-            var existingDepartment = _departmentDal.Get(d => d.Id == department.Id);
+            var deletedDepartment = _departmentDal.Get(d => d.Id == department.Id);
 
-            if (existingDepartment == null)
-                return new Result(false, "Departman bulunamadı.");
+            if (deletedDepartment == null)
+                return new Result(false, "Department not found.");
 
-            existingDepartment.IsActive = false;
-            _departmentDal.Update(existingDepartment);
-            return new Result(true, "Departman başarıyla silindi.");
+            deletedDepartment.IsActive = false;
+            deletedDepartment.IsDeleted = true;
+            deletedDepartment.UpdatedAt = DateTime.Now;
+
+            _departmentDal.Update(deletedDepartment);
+            return new Result(true, "The department was deleted successfully.");
         }
 
         public DataResult<List<Department>> GetAll()
         {
             var departments = _departmentDal.GetAll();
-            return new DataResult<List<Department>>(departments, true, "Başarılı.");
+            return new DataResult<List<Department>>(departments, true, "All departments listed.");
         }
 
         public DataResult<Department> GetById(int id)
@@ -45,9 +48,9 @@ namespace HRMS.Business.Concrete
             var department = _departmentDal.Get(d => d.Id == id);
 
             if (department == null)
-                return new DataResult<Department>(null, false, "Departman bulunamadı.");
+                return new DataResult<Department>(null, false, "Department not found.");
 
-            return new DataResult<Department>(department, true, "Departman başarıyla getirildi.");
+            return new DataResult<Department>(department, true, "The department was brought successfully.");
         }
 
         public Result Update(Department department)
@@ -55,15 +58,14 @@ namespace HRMS.Business.Concrete
             var updatedDepartment = _departmentDal.Get(d => d.Id == department.Id);
 
             if (updatedDepartment == null)
-                return new Result(false, "Güncellenecek departman bulunamadı.");
+                return new Result(false, "No department found to update.");
 
             updatedDepartment.IsActive = department.IsActive;
-            updatedDepartment.IsDeleted = department.IsDeleted;
             updatedDepartment.Name = department.Name;
             updatedDepartment.UpdatedAt = DateTime.Now;
 
             _departmentDal.Update(updatedDepartment);
-            return new Result(true, "Departman güncellendi.");
+            return new Result(true, "Department updated.");
         }
     }
 }

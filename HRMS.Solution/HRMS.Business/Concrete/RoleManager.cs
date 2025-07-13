@@ -18,11 +18,11 @@ namespace HRMS.Business.Concrete
         {
             if (_roleDal.Any(r => r.RoleName == role.RoleName))
             {
-                return new Result(false, "Eklemek istediğiniz rol bulunuyor.");
+                return new Result(false, "There is a job role you want to add.");
             }
 
             _roleDal.Add(role);
-            return new Result(true, "Rol eklendi.");
+            return new Result(true, "Job role added.");
         }
 
         public Result Delete(Role role)
@@ -30,42 +30,44 @@ namespace HRMS.Business.Concrete
             var deletedRole = _roleDal.Get(r => r.Id == role.Id);
             if (deletedRole == null)
             {
-                return new Result(false, "Silmek istediğiniz rol bulunmuyor");
+                return new Result(false, "The job role you want to delete does not exist.");
             }
 
             deletedRole.IsDeleted = true;
+            deletedRole.IsActive = false;
+            deletedRole.UpdatedAt = DateTime.Now;
+
             _roleDal.Update(deletedRole);
-            return new Result(true, "Rol silindi.");
+            return new Result(true, "The job role was deleted.");
         }
 
         public DataResult<List<Role>> GetAll()
         {
             var roles = _roleDal.GetAll();
-            return new DataResult<List<Role>>(roles, true, "Roller listelendi.");
+            return new DataResult<List<Role>>(roles, true, "All roles are listed.");
         }
 
         public DataResult<Role> GetById(int id)
         {
             var role = _roleDal.Get(r => r.Id == id);
             if (role == null)
-                return new DataResult<Role>(null, false, "Rol bulunmuyor.");
+                return new DataResult<Role>(null, false, "The job role you want is not available.");
 
-            return new DataResult<Role>(role, true, "Rol başarıyla getirildi.");
+            return new DataResult<Role>(role, true, "The job role you requested has been successfully filled.");
         }
 
         public Result Update(Role role)
         {
             var updatedRole = _roleDal.Get(r => r.Id == role.Id);
             if (updatedRole == null)
-                return new Result(false, "Güncelleme yapılacak rol bulunamadı.");
+                return new Result(false, "No job role found to update.");
 
             updatedRole.IsActive = role.IsActive;
-            updatedRole.IsDeleted = role.IsDeleted;
             updatedRole.RoleName = role.RoleName;
             updatedRole.UpdatedAt = DateTime.Now;
 
             _roleDal.Update(updatedRole);
-            return new Result(true, "Rol güncellendi.");
+            return new Result(true, "The job role has been updated.");
         }
     }
 }

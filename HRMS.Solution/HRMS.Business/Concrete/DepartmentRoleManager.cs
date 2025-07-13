@@ -15,11 +15,11 @@ namespace HRMS.Business.Concrete
         }
         public Result Add(DepartmentRole departmentRole)
         {
-            bool exists = _departmentRoleDal.Any(dr =>
+            bool addedDepartmentRole = _departmentRoleDal.Any(dr =>
                 dr.DepartmentId == departmentRole.DepartmentId &&
                 dr.RoleId == departmentRole.RoleId);
 
-            if (exists)
+            if (addedDepartmentRole)
                 return new Result(false, "This department-role combination already exists.");
 
             _departmentRoleDal.Add(departmentRole);
@@ -28,37 +28,44 @@ namespace HRMS.Business.Concrete
 
         public Result Update(DepartmentRole departmentRole)
         {
-            var existing = _departmentRoleDal.Get(dr => dr.Id == departmentRole.Id);
-            if (existing == null)
+            var updatedDepartmentRole = _departmentRoleDal.Get(dr => dr.Id == departmentRole.Id);
+            if (updatedDepartmentRole == null)
                 return new Result(false, "Department-role not found.");
 
-            _departmentRoleDal.Update(departmentRole);
+            updatedDepartmentRole.UpdatedAt = DateTime.Now;
+            updatedDepartmentRole.IsActive = departmentRole.IsActive;
+
+            _departmentRoleDal.Update(updatedDepartmentRole);
             return new Result(true, "Updated.");
         }
 
         public Result Delete(DepartmentRole departmentRole)
         {
-            var existing = _departmentRoleDal.Get(dr => dr.Id == departmentRole.Id);
-            if (existing == null)
+            var deletedDepartmentRole = _departmentRoleDal.Get(dr => dr.Id == departmentRole.Id);
+            if (deletedDepartmentRole == null)
                 return new Result(false, "Department-role not found.");
 
-            _departmentRoleDal.Delete(departmentRole);
+            deletedDepartmentRole.IsDeleted = true;
+            deletedDepartmentRole.IsActive = false;
+            deletedDepartmentRole.UpdatedAt = DateTime.Now;
+
+            _departmentRoleDal.Delete(deletedDepartmentRole);
             return new Result(true, "Deleted.");
         }
 
         public DataResult<DepartmentRole> GetById(int id)
         {
-            var dr = _departmentRoleDal.Get(dr => dr.Id == id);
-            if (dr == null)
+            var departmentRole = _departmentRoleDal.Get(dr => dr.Id == id);
+            if (departmentRole == null)
                 return new DataResult<DepartmentRole>(null, false, "Not found.");
 
-            return new DataResult<DepartmentRole>(dr, true, "Success.");
+            return new DataResult<DepartmentRole>(departmentRole, true, "Success.");
         }
 
         public DataResult<List<DepartmentRole>> GetAll()
         {
-            var list = _departmentRoleDal.GetAll();
-            return new DataResult<List<DepartmentRole>>(list, true, "Listed.");
+            var departmentRoles = _departmentRoleDal.GetAll();
+            return new DataResult<List<DepartmentRole>>(departmentRoles, true, "Listed.");
         }
     }
 }
