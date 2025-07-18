@@ -14,6 +14,7 @@ namespace HRMS.Entities.DTOs.Department
             RoleIds = new List<int>();
         }
         public string Name { get; set; } = string.Empty;
-        public List<int> RoleIds { get; set; }
+        public List<int>? RoleIds { get; set; }
+        public List<int>? EmployeeIds { get; set; }
     }
 }

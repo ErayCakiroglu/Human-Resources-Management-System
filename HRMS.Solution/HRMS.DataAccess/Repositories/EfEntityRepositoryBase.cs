@@ -35,9 +35,17 @@ namespace HRMS.DataAccess.Repositories
             _context.SaveChanges();
         }
 
-        public TEntity? Get(Expression<Func<TEntity, bool>> expression)
+        public TEntity? Get(Expression<Func<TEntity, bool>> filter, Func<IQueryable<TEntity>,
+            IQueryable<TEntity>>? include = null)
         {
-            return _context.Set<TEntity>().FirstOrDefault(expression);
+            IQueryable<TEntity> query = _context.Set<TEntity>();
+
+            if (include != null)
+            {
+                query = include(query);
+            }
+
+            return query.FirstOrDefault(filter);
         }
 
         public List<TEntity> GetAll(Expression<Func<TEntity, bool>>? expression = null)

@@ -13,5 +13,8 @@ namespace HRMS.Entities.Concrete
         public string Name { get; set; } = string.Empty;
         public ICollection<Employee> Employees { get; set; }
         public ICollection<DepartmentRole> DepartmentRoles { get; set; }
+        public string? DeletedBy { get; set; }
+        public string? DeletionReason { get; set; }
+
     }
 }

@@ -1,9 +1,8 @@
 ﻿using HRMS.Business.Abstract;
+using HRMS.Business.Constants;
 using HRMS.Business.Helper.Abstract;
 using HRMS.Core.Utilities;
 using HRMS.DataAccess.Abstract;
-using HRMS.DataAccess.Concrete.EntityFramework;
-using HRMS.Entities.Abstract;
 using HRMS.Entities.Concrete;
 using HRMS.Entities.DTOs.Employee;
 
@@ -23,7 +22,7 @@ namespace HRMS.Business.Concrete
         public Result Add(CreateEmployeeDTO dto)
         {
             if (_employeeDal.Any(e => e.Email == dto.Email))
-                return new Result(false, "This email is already registered.");
+                return new Result(false, Messages.IncludesMessage(dto.FirstName + " " + dto.LastName));
 
             var employee = new Employee
             {
@@ -41,14 +40,14 @@ namespace HRMS.Business.Concrete
             };
 
             _employeeDal.Add(employee);
-            return new Result(true, "The employee was added successfully.");
+            return new Result(true, Messages.AddedMessage(dto.FirstName + " " + dto.LastName));
         }
 
         public Result Update(UpdateEmployeeDTO dto)
         {
             var updatedEmployee = _employeeDal.Get(e => e.Id == dto.Id);
             if (updatedEmployee == null)
-                return new Result(false, "No employees found.");
+                return new Result(false, Messages.NotFoundMessage("Employee"));
 
             if (dto.DepartmentRoleId.HasValue)
                 updatedEmployee.DepartmentRoleId = dto.DepartmentRoleId.Value;
@@ -71,14 +70,14 @@ namespace HRMS.Business.Concrete
             updatedEmployee.UpdatedAt = DateTime.Now;
 
             _employeeDal.Update(updatedEmployee);
-            return new Result(true, "The worker was updated successfully.");
+            return new Result(true, Messages.UpdatedMessage(dto.FirstName + " " + dto.LastName));
         }
 
         public Result Delete(DeleteEmployeeDTO dto)
         {
             var employee = _employeeDal.Get(e => e.Id == dto.Id);
             if (employee == null)
-                return new Result(false, "Employee not found.");
+                return new Result(false, Messages.NotFoundMessage("Employee"));
 
             employee.IsActive = false;
             employee.IsDeleted = true;
@@ -88,7 +87,7 @@ namespace HRMS.Business.Concrete
             employee.UpdatedAt = DateTime.Now;
 
             _employeeDal.Update(employee);
-            return new Result(true, "Employee marked as terminated.");
+            return new Result(true, Messages.DeletedMessage(dto.FirstName + " " + dto.LastName));
         }
 
 
@@ -96,7 +95,7 @@ namespace HRMS.Business.Concrete
         {
             var employee = _employeeDal.Get(e => e.Id == id);
             if (employee == null)
-                return new DataResult<EmployeeDetailDTO>(null, false, "No employees found.");
+                return new DataResult<EmployeeDetailDTO>(null, false, Messages.NotFoundMessage("Employee"));
 
             var dto = new EmployeeDetailDTO
             {
@@ -116,7 +115,8 @@ namespace HRMS.Business.Concrete
                 UpdatedAt = employee.UpdatedAt
             };
 
-            return new DataResult<EmployeeDetailDTO>(dto, true, "The desired employee was brought in.");
+            return new DataResult<EmployeeDetailDTO>(dto, true, Messages.WasBroughtMessage(dto.FirstName + " " +
+                dto.LastName));
         }
 
         public DataResult<List<EmployeeSummaryDTO>> GetAll()
@@ -135,14 +135,13 @@ namespace HRMS.Business.Concrete
                 RoleName = employee.DepartmentRole?.Role?.RoleName ?? "",
             }).ToList();
 
-            return new DataResult<List<EmployeeSummaryDTO>>(employeeDtos, true, "The list of employees was brought.");
+            return new DataResult<List<EmployeeSummaryDTO>>(employeeDtos, true, Messages.ListedMessage("Employees"));
         }
 
         public DataResult<List<EmployeeDetailDTO>> GetAllWithDetails()
         {
             var employees = _employeeDal.GetAllWithDetails();
 
-            // Örnek dönüşüm, basit manuel
             var employeeDetails = employees.Select(e => new EmployeeDetailDTO
             {
                 Id = e.Id,
@@ -161,9 +160,8 @@ namespace HRMS.Business.Concrete
                 UpdatedAt = e.UpdatedAt
             }).ToList();
 
-            return new DataResult<List<EmployeeDetailDTO>>(employeeDetails, true, "The employees were brought in with details.");
+            return new DataResult<List<EmployeeDetailDTO>>(employeeDetails, true,
+                Messages.WithDetailsMessage("Employees"));
         }
-
-
     }
 }

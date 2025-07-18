@@ -9,11 +9,20 @@ namespace HRMS.DataAccess.Concrete.EntityFramework
         HRMSDbContext>(context),
         IDepartmentRoleDal
     {
-        public DepartmentRole GetWithDepartment(int id)
+        public DepartmentRole GetWithDepartmentAndRole(int id)
         {
             return _context.DepartmentRoles
-                    .Include(dr => dr.Department)
-                    .FirstOrDefault(dr => dr.Id == id);
+                           .Include(dr => dr.Department)
+                           .Include(dr => dr.Role)
+                           .FirstOrDefault(dr => dr.Id == id);
+        }
+
+        public List<DepartmentRole> GetAllWithDetails()
+        {
+            return _context.DepartmentRoles
+                           .Include(dr => dr.Department)
+                           .Include(dr => dr.Role)
+                           .ToList();
         }
     }
 }

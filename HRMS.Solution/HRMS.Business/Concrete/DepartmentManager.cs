@@ -1,71 +1,104 @@
 ﻿using HRMS.Business.Abstract;
+using HRMS.Business.Constants;
+using HRMS.Business.Mapping;
 using HRMS.Core.Utilities;
 using HRMS.DataAccess.Abstract;
 using HRMS.Entities.Concrete;
+using HRMS.Entities.DTOs.Department;
+using Microsoft.EntityFrameworkCore;
 
 namespace HRMS.Business.Concrete
 {
     public class DepartmentManager : IDepartmentService
     {
         private readonly IDepartmentDal _departmentDal;
-
         public DepartmentManager(IDepartmentDal departmentDal)
         {
             _departmentDal = departmentDal;
         }
-        public Result Add(Department department)
-        {
-            if (_departmentDal.Any(d => d.Name == department.Name))
-                return new Result(false, "There is a department with this department name.");
 
-            _departmentDal.Add(department);
-            return new Result(true, "Department added successfully.");
+        public Result Add(CreateDepartmentDTO departmentDTO)
+        {
+            if (_departmentDal.Any(d => d.Name == departmentDTO.Name))
+                return new Result(false, Messages.IncludesMessage(departmentDTO.Name));
+
+            var newDepartment = new Department
+            {
+                Name = departmentDTO.Name,
+                IsActive = true,
+                CreatedAt = DateTime.Now
+            };
+
+            _departmentDal.Add(newDepartment);
+
+            return new Result(true, Messages.AddedMessage(newDepartment.Name));
         }
 
-        public Result Delete(Department department)
-        {
-            var deletedDepartment = _departmentDal.Get(d => d.Id == department.Id);
-
-            if (deletedDepartment == null)
-                return new Result(false, "Department not found.");
-
-            deletedDepartment.IsActive = false;
-            deletedDepartment.IsDeleted = true;
-            deletedDepartment.UpdatedAt = DateTime.Now;
-
-            _departmentDal.Update(deletedDepartment);
-            return new Result(true, "The department was deleted successfully.");
-        }
-
-        public DataResult<List<Department>> GetAll()
-        {
-            var departments = _departmentDal.GetAll();
-            return new DataResult<List<Department>>(departments, true, "All departments listed.");
-        }
-
-        public DataResult<Department> GetById(int id)
-        {
-            var department = _departmentDal.Get(d => d.Id == id);
-
-            if (department == null)
-                return new DataResult<Department>(null, false, "Department not found.");
-
-            return new DataResult<Department>(department, true, "The department was brought successfully.");
-        }
-
-        public Result Update(Department department)
+        public Result Update(UpdateDepartmentDTO department)
         {
             var updatedDepartment = _departmentDal.Get(d => d.Id == department.Id);
 
             if (updatedDepartment == null)
-                return new Result(false, "No department found to update.");
+                return new Result(false, Messages.NotFoundMessage("Department"));
 
-            updatedDepartment.IsActive = department.IsActive;
-            updatedDepartment.Name = department.Name;
+            if (!string.IsNullOrEmpty(department.Name))
+                updatedDepartment.Name = department.Name;
+
+            if (department.IsActive.HasValue)
+                updatedDepartment.IsActive = department.IsActive.Value;
+
             updatedDepartment.UpdatedAt = DateTime.Now;
 
             _departmentDal.Update(updatedDepartment);
-            return new Result(true, "Department updated.");
+
+            return new Result(true, Messages.UpdatedMessage(updatedDepartment.Name));
+        }
+
+        public Result Delete(DeleteDepartmentDTO department)
+        {
+            var deletedDepartment = _departmentDal.Get(d => d.Id == department.Id);
+
+            if (deletedDepartment == null)
+                return new Result(false, Messages.NotFoundMessage("Department"));
+
+            deletedDepartment.IsActive = false;
+            deletedDepartment.IsDeleted = true;
+            deletedDepartment.DeletedBy = department.DeletedBy;
+            deletedDepartment.DeletionReason = department.Reason;
+            deletedDepartment.UpdatedAt = DateTime.Now;
+
+            _departmentDal.Update(deletedDepartment);
+
+            return new Result(true, Messages.DeletedMessage(deletedDepartment.Name));
+        }
+
+        public DataResult<List<DepartmentDetailsDTO>> GetAll()
+        {
+            var departments = _departmentDal.GetAll();
+
+            var departmentDtos = departments.Select(DepartmentMapper.MapToDetailsDTO).ToList();
+
+            return new DataResult<List<DepartmentDetailsDTO>>(departmentDtos, true,
+                Messages.ListedMessage("Departments"));
+        }
+
+        public DataResult<DepartmentDetailsDTO> GetById(int id)
+        {
+            var department = _departmentDal.Get(
+                d => d.Id == id,
+                include: query => query
+                    .Include(d => d.DepartmentRoles)
+                        .ThenInclude(dr => dr.Role)
+                    .Include(d => d.DepartmentRoles)
+                        .ThenInclude(dr => dr.Employees)
+            );
+
+            if (department == null)
+                return new DataResult<DepartmentDetailsDTO>(null, false, Messages.NotFoundMessage("Department"));
+
+            var dto = DepartmentMapper.MapToDetailsDTO(department);
+
+            return new DataResult<DepartmentDetailsDTO>(dto, true, Messages.WasBroughtMessage(department.Name));
         }
     }
 }

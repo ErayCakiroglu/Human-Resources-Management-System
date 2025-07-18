@@ -5,6 +5,7 @@ namespace HRMS.DataAccess.Abstract
 {
     public interface IDepartmentRoleDal : IEntityRepository<DepartmentRole>
     {
-        DepartmentRole GetWithDepartment(int id);
+        DepartmentRole GetWithDepartmentAndRole(int id);
+        List<DepartmentRole> GetAllWithDetails();
     }
 }

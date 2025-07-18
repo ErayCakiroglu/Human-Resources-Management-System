@@ -1,14 +1,15 @@
 ﻿using HRMS.Core.Utilities;
 using HRMS.Entities.Concrete;
+using HRMS.Entities.DTOs.Department;
 
 namespace HRMS.Business.Abstract
 {
     public interface IDepartmentService
     {
-        Result Add(Department employee);
-        Result Update(Department employee);
-        Result Delete(Department employee);
-        DataResult<Department> GetById(int id);
-        DataResult<List<Department>> GetAll();
+        Result Add(CreateDepartmentDTO employee);
+        Result Update(UpdateDepartmentDTO employee);
+        Result Delete(DeleteDepartmentDTO employee);
+        DataResult<DepartmentDetailsDTO> GetById(int id);
+        DataResult<List<DepartmentDetailsDTO>> GetAll();
     }
 }
