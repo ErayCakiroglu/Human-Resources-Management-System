@@ -20,7 +20,7 @@ namespace HRMS.Business.Concrete
         public Result Add(CreateDepartmentDTO departmentDTO)
         {
             if (_departmentDal.Any(d => d.Name == departmentDTO.Name))
-                return new Result(false, Messages.IncludesMessage(departmentDTO.Name));
+                return new Result(false, Messages.AlreadyExistsMessage(departmentDTO.Name));
 
             var newDepartment = new Department
             {

@@ -20,9 +20,11 @@ namespace HRMS.Business.Concrete
         {
 
             if (_departmentRoleDal.Any(dr =>
-                dr.DepartmentId == departmentRole.DepartmentId &&
-                dr.RoleId == departmentRole.RoleId))
-                return new Result(false, Messages.IncludesMessage(departmentRole.ToString()));
+                    dr.DepartmentId == departmentRole.DepartmentId &&
+                    dr.RoleId == departmentRole.RoleId &&
+                    !dr.IsDeleted))
+                return new Result(false, Messages.AlreadyExistsMessage($"DepartmentId: {departmentRole.DepartmentId}," +
+                    $" RoleId: {departmentRole.RoleId}"));
 
             var addedDepartmentRole = new DepartmentRole
             {
@@ -31,7 +33,8 @@ namespace HRMS.Business.Concrete
             };
 
             _departmentRoleDal.Add(addedDepartmentRole);
-            return new Result(true, Messages.AddedMessage(departmentRole.ToString()));
+            return new Result(true, Messages.AddedMessage($"DepartmentId: {departmentRole.DepartmentId}," +
+                    $" RoleId: {departmentRole.RoleId}"));
         }
 
         public Result Update(UpdateDepartmentRoleDTO departmentRole)
@@ -45,12 +48,13 @@ namespace HRMS.Business.Concrete
                 updatedDepartmentRole.IsActive = Convert.ToBoolean(departmentRole.IsActive);
 
             if (departmentRole.RoleId != null)
-                updatedDepartmentRole.RoleId = Convert.ToInt32(departmentRole.RoleId);
+                updatedDepartmentRole.RoleId = departmentRole.RoleId.Value;
 
             updatedDepartmentRole.UpdatedAt = DateTime.Now;
 
             _departmentRoleDal.Update(updatedDepartmentRole);
-            return new Result(true, Messages.UpdatedMessage(departmentRole.ToString()));
+            return new Result(true, Messages.UpdatedMessage($"DepartmentId: {departmentRole.Id}," +
+                    $" RoleId: {departmentRole.RoleId}"));
         }
 
         public Result Delete(DeleteDepartmentRoleDTO departmentRole)
@@ -64,7 +68,7 @@ namespace HRMS.Business.Concrete
             deletedDepartmentRole.UpdatedAt = DateTime.Now;
 
             _departmentRoleDal.Update(deletedDepartmentRole);
-            return new Result(true, Messages.DeletedMessage(departmentRole.ToString()));
+            return new Result(true, Messages.DeletedMessage(deletedDepartmentRole.Department.Name));
         }
 
         public DataResult<DepartmentRoleDetailsDTO> GetById(int id)
@@ -84,7 +88,7 @@ namespace HRMS.Business.Concrete
             };
 
             return new DataResult<DepartmentRoleDetailsDTO>(departmentRoleToDTO, true,
-                Messages.WasBroughtMessage(departmentRole.ToString()));
+                Messages.WasBroughtMessage(departmentRoleToDTO.DepartmentName));
         }
 
         public DataResult<List<DepartmentRoleDetailsDTO>> GetAllDetails()
@@ -94,8 +98,8 @@ namespace HRMS.Business.Concrete
                         .Select(dr => new DepartmentRoleDetailsDTO
                         {
                             Id = dr.Id,
-                            DepartmentName = dr.Department.Name,
-                            RoleName = dr.Role.RoleName,
+                            DepartmentName = dr.Department?.Name ?? string.Empty,
+                            RoleName = dr.Role?.RoleName ?? string.Empty,
                             IsActive = dr.IsActive
                         }
                         ).ToList();

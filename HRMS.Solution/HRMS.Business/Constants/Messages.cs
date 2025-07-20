@@ -8,44 +8,12 @@ namespace HRMS.Business.Constants
 {
     public static class Messages
     {
-        public static string NotFoundMessage(string notFoundObject)
-        {
-            return $"{notFoundObject} is not found";
-        }
-
-        public static string ListedMessage(string listedObject)
-        {
-            return $"{listedObject} listed.";
-        }
-
-        public static string UpdatedMessage(string updatedObject)
-        {
-            return $"{updatedObject} updated.";
-        }
-
-        public static string DeletedMessage(string deletedObject)
-        {
-            return $"{deletedObject} deleted.";
-        }
-
-        public static string WasBroughtMessage(string broughtObject)
-        {
-            return $"{broughtObject} was brought.";
-        }
-
-        public static string AddedMessage(string addedObject)
-        {
-            return $"{addedObject} added.";
-        }
-
-        public static string IncludesMessage(string includedObject)
-        {
-            return $"{includedObject} already exists.";
-        }
-
-        public static string WithDetailsMessage(string withDetailsObject)
-        {
-            return $"{withDetailsObject} was brought with details";
-        }
+        public static string AlreadyExistsMessage(string input) => $"{input} already exists.";
+        public static string AddedMessage(string input) => $"{input} added successfully.";
+        public static string UpdatedMessage(string input) => $"{input} updated successfully.";
+        public static string DeletedMessage(string input) => $"{input} deleted successfully.";
+        public static string NotFoundMessage(string input) => $"{input} not found.";
+        public static string WasBroughtMessage(string input) => $"{input} was retrieved.";
+        public static string ListedMessage(string input) => $"{input} listed.";
     }
 }

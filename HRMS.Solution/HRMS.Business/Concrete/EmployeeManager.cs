@@ -22,7 +22,7 @@ namespace HRMS.Business.Concrete
         public Result Add(CreateEmployeeDTO dto)
         {
             if (_employeeDal.Any(e => e.Email == dto.Email))
-                return new Result(false, Messages.IncludesMessage(dto.FirstName + " " + dto.LastName));
+                return new Result(false, Messages.AlreadyExistsMessage(dto.FirstName + " " + dto.LastName));
 
             var employee = new Employee
             {
@@ -161,7 +161,7 @@ namespace HRMS.Business.Concrete
             }).ToList();
 
             return new DataResult<List<EmployeeDetailDTO>>(employeeDetails, true,
-                Messages.WithDetailsMessage("Employees"));
+                Messages.ListedMessage("Employees"));
         }
     }
 }
