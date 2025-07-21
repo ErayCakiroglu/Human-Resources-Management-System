@@ -37,7 +37,14 @@ namespace HRMS.Business.Mapping
                         dto.Employees.Add(new EmployeeSummaryDTO
                         {
                             Id = employee.Id,
-                            Email = employee.Email
+                            FirstName = employee.FirstName,
+                            LastName = employee.LastName,
+                            Email = employee.Email,
+                            PhoneNumber = employee.PhoneNumber,
+                            EmployeeCode = employee.EmployeeCode,
+                            DepartmentName = department.Name,
+                            RoleName = departmentRole.Role?.RoleName ?? "",
+                            DepartmentRoleId = departmentRole.Id
                         });
                     }
                 }

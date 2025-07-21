@@ -1,4 +1,5 @@
 ﻿using HRMS.Business.Abstract;
+using HRMS.Business.Constants;
 using HRMS.Core.Utilities;
 using HRMS.DataAccess.Abstract;
 using HRMS.Entities.Concrete;
@@ -24,16 +25,16 @@ namespace HRMS.Business.Concrete
         {
             var employee = _employeeDal.Get(e => e.Id == employeeId);
             if (employee == null)
-                return new Result(false, "Çalışan bulunamadı");
+                return new Result(false, Messages.NotFoundMessage("Employee"));
 
             var departmentRole = _departmentRoleDal.Get(dr => dr.Id == departmentRoleId);
             if (departmentRole == null)
-                return new Result(false, "Departman rolü bulunamadı");
+                return new Result(false, Messages.NotFoundMessage("Department-role"));
 
             employee.DepartmentRoleId = departmentRoleId;
             _employeeDal.Update(employee);
 
-            return new Result(true, "Çalışan başarıyla departman rolüne atandı.");
+            return new Result(true, Messages.AppointMessage("Employee, department role"));
         }
 
         public Result AssignRolesToDepartment(int departmentId, List<int> roleIds)
@@ -55,7 +56,7 @@ namespace HRMS.Business.Concrete
                 });
             }
 
-            return new Result(true, "Roller departmana başarıyla atandı.");
+            return new Result(true, Messages.AppointMessage("Roles to department"));
         }
     }
 }

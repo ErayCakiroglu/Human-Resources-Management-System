@@ -1,6 +1,7 @@
 ﻿using HRMS.Business.Abstract;
 using HRMS.Business.Constants;
 using HRMS.Business.Helper.Abstract;
+using HRMS.Business.Mapping;
 using HRMS.Core.Utilities;
 using HRMS.DataAccess.Abstract;
 using HRMS.Entities.Concrete;
@@ -87,53 +88,24 @@ namespace HRMS.Business.Concrete
             employee.UpdatedAt = DateTime.Now;
 
             _employeeDal.Update(employee);
-            return new Result(true, Messages.DeletedMessage(dto.FirstName + " " + dto.LastName));
+            return new Result(true, Messages.DeletedMessage($"{employee.FirstName} {employee.LastName}"));
         }
 
 
         public DataResult<EmployeeDetailDTO> GetById(int id)
         {
-            var employee = _employeeDal.Get(e => e.Id == id);
+            var employee = _employeeDal.GetWithDetails(e => e.Id == id);
             if (employee == null)
                 return new DataResult<EmployeeDetailDTO>(null, false, Messages.NotFoundMessage("Employee"));
 
-            var dto = new EmployeeDetailDTO
-            {
-                Id = employee.Id,
-                FirstName = employee.FirstName,
-                LastName = employee.LastName,
-                Email = employee.Email,
-                PhoneNumber = employee.PhoneNumber,
-                HireDate = employee.HireDate,
-                EmployeeCode = employee.EmployeeCode,
-                DepartmentRoleId = employee.DepartmentRoleId,
-                DepartmentName = employee.DepartmentRole?.Department?.Name ?? "",
-                RoleName = employee.DepartmentRole?.Role?.RoleName ?? "",
-                IsActive = employee.IsActive,
-                IsDeleted = employee.IsDeleted,
-                CreatedAt = employee.CreatedAt,
-                UpdatedAt = employee.UpdatedAt
-            };
-
-            return new DataResult<EmployeeDetailDTO>(dto, true, Messages.WasBroughtMessage(dto.FirstName + " " +
-                dto.LastName));
+            var dto = employee.ToDetailDto();
+            return new DataResult<EmployeeDetailDTO>(dto, true, Messages.WasBroughtMessage($"{dto.FirstName} {dto.LastName}"));
         }
 
         public DataResult<List<EmployeeSummaryDTO>> GetAll()
         {
-            var employees = _employeeDal.GetAll();
-
-            var employeeDtos = employees.Select(employee => new EmployeeSummaryDTO
-            {
-                Id = employee.Id,
-                FirstName = employee.FirstName,
-                LastName = employee.LastName,
-                Email = employee.Email,
-                PhoneNumber = employee.PhoneNumber,
-                EmployeeCode = employee.EmployeeCode,
-                DepartmentName = employee.DepartmentRole?.Department?.Name ?? "",
-                RoleName = employee.DepartmentRole?.Role?.RoleName ?? "",
-            }).ToList();
+            var employees = _employeeDal.GetAllWithDetails();
+            var employeeDtos = employees.Select(e => e.ToSummaryDto()).ToList();
 
             return new DataResult<List<EmployeeSummaryDTO>>(employeeDtos, true, Messages.ListedMessage("Employees"));
         }
@@ -141,27 +113,9 @@ namespace HRMS.Business.Concrete
         public DataResult<List<EmployeeDetailDTO>> GetAllWithDetails()
         {
             var employees = _employeeDal.GetAllWithDetails();
+            var employeeDetails = employees.Select(e => e.ToDetailDto()).ToList();
 
-            var employeeDetails = employees.Select(e => new EmployeeDetailDTO
-            {
-                Id = e.Id,
-                FirstName = e.FirstName,
-                LastName = e.LastName,
-                Email = e.Email,
-                PhoneNumber = e.PhoneNumber,
-                HireDate = e.HireDate,
-                EmployeeCode = e.EmployeeCode,
-                DepartmentRoleId = e.DepartmentRoleId,
-                DepartmentName = e.DepartmentRole?.Department?.Name ?? "",
-                RoleName = e.DepartmentRole?.Role?.RoleName ?? "",
-                IsActive = e.IsActive,
-                IsDeleted = e.IsDeleted,
-                CreatedAt = e.CreatedAt,
-                UpdatedAt = e.UpdatedAt
-            }).ToList();
-
-            return new DataResult<List<EmployeeDetailDTO>>(employeeDetails, true,
-                Messages.ListedMessage("Employees"));
+            return new DataResult<List<EmployeeDetailDTO>>(employeeDetails, true, Messages.ListedMessage("Employees"));
         }
     }
 }

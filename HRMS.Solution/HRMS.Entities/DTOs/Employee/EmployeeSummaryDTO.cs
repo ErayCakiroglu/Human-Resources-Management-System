@@ -17,6 +17,7 @@ namespace HRMS.Entities.DTOs.Employee
         public string EmployeeCode { get; set; } = string.Empty;
         public string DepartmentName { get; set; } = string.Empty;
         public string RoleName { get; set; } = string.Empty;
+        public int DepartmentRoleId { get; set; }
 
     }
 }

@@ -1,7 +1,9 @@
 ﻿using HRMS.Business.Abstract;
 using HRMS.Business.Constants;
+using HRMS.Business.Mapping;
 using HRMS.Core.Utilities;
 using HRMS.DataAccess.Abstract;
+using HRMS.Entities.Abstract;
 using HRMS.Entities.Concrete;
 using HRMS.Entities.DTOs.DepartmentRole;
 using System.Data;
@@ -16,95 +18,67 @@ namespace HRMS.Business.Concrete
         {
             _departmentRoleDal = departmentRoleDal;
         }
-        public Result Add(CreateDepartmentRoleDTO departmentRole)
+        public Result Add(CreateDepartmentRoleDTO departmentRoleDTO)
         {
+            if (_departmentRoleDal.Any(dr => dr.DepartmentId == departmentRoleDTO.DepartmentId &&
+                                             dr.RoleId == departmentRoleDTO.RoleId &&
+                                             !dr.IsDeleted))
+                return new Result(false, Messages.AlreadyExistsMessage($"DepartmentId: {departmentRoleDTO.DepartmentId}," +
+                    $"RoleId: {departmentRoleDTO.RoleId}"));
 
-            if (_departmentRoleDal.Any(dr =>
-                    dr.DepartmentId == departmentRole.DepartmentId &&
-                    dr.RoleId == departmentRole.RoleId &&
-                    !dr.IsDeleted))
-                return new Result(false, Messages.AlreadyExistsMessage($"DepartmentId: {departmentRole.DepartmentId}," +
-                    $" RoleId: {departmentRole.RoleId}"));
+            var entity = departmentRoleDTO.ToEntity();
+            _departmentRoleDal.Add(entity);
 
-            var addedDepartmentRole = new DepartmentRole
-            {
-                DepartmentId = departmentRole.DepartmentId,
-                RoleId = departmentRole.RoleId
-            };
-
-            _departmentRoleDal.Add(addedDepartmentRole);
-            return new Result(true, Messages.AddedMessage($"DepartmentId: {departmentRole.DepartmentId}," +
-                    $" RoleId: {departmentRole.RoleId}"));
+            return new Result(true, Messages.AddedMessage($"DepartmentId: {departmentRoleDTO.DepartmentId}," +
+                $"RoleId: {departmentRoleDTO.RoleId}"));
         }
 
-        public Result Update(UpdateDepartmentRoleDTO departmentRole)
+        public Result Update(UpdateDepartmentRoleDTO departmentRoleDTO)
         {
-            var updatedDepartmentRole = _departmentRoleDal.Get(dr => dr.Id == departmentRole.Id);
+            var entity = _departmentRoleDal.Get(dr => dr.Id == departmentRoleDTO.Id);
+            if (entity == null)
+                return new Result(false, Messages.NotFoundMessage($"DepartmentRole Id: {departmentRoleDTO.Id}"));
 
-            if (updatedDepartmentRole == null)
-                return new Result(false, Messages.NotFoundMessage($"DepartmentRole Id: {departmentRole.Id}"));
+            departmentRoleDTO.MapToEntity(entity);
+            _departmentRoleDal.Update(entity);
 
-            if (departmentRole.IsActive != null)
-                updatedDepartmentRole.IsActive = Convert.ToBoolean(departmentRole.IsActive);
-
-            if (departmentRole.RoleId != null)
-                updatedDepartmentRole.RoleId = departmentRole.RoleId.Value;
-
-            updatedDepartmentRole.UpdatedAt = DateTime.Now;
-
-            _departmentRoleDal.Update(updatedDepartmentRole);
-            return new Result(true, Messages.UpdatedMessage($"DepartmentId: {departmentRole.Id}," +
-                    $" RoleId: {departmentRole.RoleId}"));
+            return new Result(true, Messages.UpdatedMessage($"DepartmentRole Id: {departmentRoleDTO.Id}"));
         }
 
-        public Result Delete(DeleteDepartmentRoleDTO departmentRole)
+        public Result Delete(DeleteDepartmentRoleDTO departmentRoleDTO)
         {
-            var deletedDepartmentRole = _departmentRoleDal.Get(dr => dr.Id == departmentRole.Id);
-            if (deletedDepartmentRole == null)
-                return new Result(false, Messages.NotFoundMessage($"DepartmentRole Id: {departmentRole.Id}"));
+            var entity = _departmentRoleDal.GetWithDepartmentAndRole(departmentRoleDTO.Id);
 
-            deletedDepartmentRole.IsDeleted = true;
-            deletedDepartmentRole.IsActive = false;
-            deletedDepartmentRole.UpdatedAt = DateTime.Now;
+            if (entity == null)
+                return new Result(false, Messages.NotFoundMessage($"DepartmentRole Id: {departmentRoleDTO.Id}"));
 
-            _departmentRoleDal.Update(deletedDepartmentRole);
-            return new Result(true, Messages.DeletedMessage(deletedDepartmentRole.Department.Name));
+            entity.IsDeleted = true;
+            entity.IsActive = false;
+            entity.UpdatedAt = DateTime.Now;
+
+            _departmentRoleDal.Update(entity);
+            return new Result(true, Messages.DeletedMessage(entity.Department?.Name ?? ""));
         }
 
         public DataResult<DepartmentRoleDetailsDTO> GetById(int id)
         {
-            var departmentRole = _departmentRoleDal.GetWithDepartmentAndRole(id);
-
-            if (departmentRole == null)
+            var entity = _departmentRoleDal.GetWithDepartmentAndRole(id);
+            if (entity == null)
                 return new DataResult<DepartmentRoleDetailsDTO>(null, false,
                     Messages.NotFoundMessage($"DepartmentRole Id: {id}"));
 
-
-            var departmentRoleToDTO = new DepartmentRoleDetailsDTO
-            {
-                DepartmentName = departmentRole.Department?.Name ?? string.Empty,
-                RoleName = departmentRole.Role?.RoleName ?? string.Empty,
-                IsActive = departmentRole.IsActive,
-            };
-
-            return new DataResult<DepartmentRoleDetailsDTO>(departmentRoleToDTO, true,
-                Messages.WasBroughtMessage(departmentRoleToDTO.DepartmentName));
+            return new DataResult<DepartmentRoleDetailsDTO>(entity.ToDetailDto(), true,
+                Messages.WasBroughtMessage(entity.Department?.Name ?? ""));
         }
 
         public DataResult<List<DepartmentRoleDetailsDTO>> GetAllDetails()
         {
-            var departmentRoleDTOList = _departmentRoleDal
-                        .GetAllWithDetails()
-                        .Select(dr => new DepartmentRoleDetailsDTO
-                        {
-                            Id = dr.Id,
-                            DepartmentName = dr.Department?.Name ?? string.Empty,
-                            RoleName = dr.Role?.RoleName ?? string.Empty,
-                            IsActive = dr.IsActive
-                        }
-                        ).ToList();
+            var dtos = _departmentRoleDal
+                .GetAllWithDetails()
+                .Select(dr => dr.ToDetailDto())
+                .ToList();
 
-            return new DataResult<List<DepartmentRoleDetailsDTO>>(departmentRoleDTOList, true,
+            return new DataResult<List<DepartmentRoleDetailsDTO>>(dtos, true,
                 Messages.ListedMessage("Departments-role listed"));
         }
     }

@@ -27,7 +27,9 @@ namespace HRMS.Business.Concrete
             var newRole = new Role()
             {
                 RoleName = roleDTO.RoleName,
-                CreatedAt = DateTime.Now
+                CreatedAt = DateTime.Now,
+                IsActive = true,
+                IsDeleted = false
             };
 
             _roleDal.Add(newRole);
@@ -66,9 +68,10 @@ namespace HRMS.Business.Concrete
                     Email = emp.Email,
                     PhoneNumber = emp.PhoneNumber,
                     EmployeeCode = emp.EmployeeCode,
-                    DepartmentName = emp.Department?.Name ?? string.Empty,
+                    DepartmentName = emp.DepartmentRole?.Department?.Name ?? string.Empty,
                     RoleName = role.RoleName
-                }).ToList()
+                }).ToList(),
+                DepartmentNames = role.DepartmentRoles.Select(dr => dr.Department?.Name ?? string.Empty).ToList()
             }).ToList();
 
             return new DataResult<List<RoleDetailDTO>>(roleDetailDTOs, true, Messages.ListedMessage("Roles"));
@@ -84,7 +87,7 @@ namespace HRMS.Business.Concrete
             {
                 Id = role.Id,
                 RoleName = role.RoleName,
-                DepartmentNames = role.DepartmentRoles.Select(dr => dr.Department.Name).ToList(),
+                DepartmentNames = role.DepartmentRoles.Select(dr => dr.Department?.Name ?? string.Empty).ToList(),
                 Employees = role.Employees.Select(e => new EmployeeSummaryDTO
                 {
                     Id = e.Id,
