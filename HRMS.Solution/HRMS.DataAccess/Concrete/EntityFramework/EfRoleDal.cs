@@ -13,7 +13,8 @@ namespace HRMS.DataAccess.Concrete.EntityFramework
         {
             return _context.Roles
                 .Include(r => r.Employees)
-                    .ThenInclude(e => e.Department)
+                    .ThenInclude(e => e.DepartmentRole)
+                        .ThenInclude(dr => dr.Department)
                 .ToList();
         }
 

@@ -24,6 +24,7 @@ builder.Services.AddScoped<IRoleService, RoleManager>();
 builder.Services.AddScoped<IRoleDal, EfRoleDal>();
 builder.Services.AddScoped<ICodeGenerator<CreateEmployeeDTO>, EmployeeCodeGenerator>();
 builder.Services.AddScoped<IEmployeeService, EmployeeManager>();
+builder.Services.AddScoped<IDepartmentRelationService, DepartmentRelationManager>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
