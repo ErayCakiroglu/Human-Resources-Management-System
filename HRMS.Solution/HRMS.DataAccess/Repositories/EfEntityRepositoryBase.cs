@@ -35,10 +35,17 @@ namespace HRMS.DataAccess.Repositories
             _context.SaveChanges();
         }
 
-        public TEntity? Get(Expression<Func<TEntity, bool>> filter, Func<IQueryable<TEntity>,
-            IQueryable<TEntity>>? include = null)
+        public TEntity? Get(Expression<Func<TEntity, bool>> filter, 
+            Func<IQueryable<TEntity>,
+            IQueryable<TEntity>>? include = null,
+            bool ignoreQueryFilters = false)
         {
             IQueryable<TEntity> query = _context.Set<TEntity>();
+
+            if (ignoreQueryFilters)
+            {
+                query = query.IgnoreQueryFilters();
+            }
 
             if (include != null)
             {
@@ -48,11 +55,22 @@ namespace HRMS.DataAccess.Repositories
             return query.FirstOrDefault(filter);
         }
 
-        public List<TEntity> GetAll(Expression<Func<TEntity, bool>>? expression = null)
+        public List<TEntity> GetAll(Expression<Func<TEntity, bool>>? filter = null,
+                                 Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null,
+                                 bool ignoreQueryFilters = false)
         {
-            return expression == null ?
-                    _context.Set<TEntity>().ToList() :
-                    _context.Set<TEntity>().Where(expression).ToList();
+            IQueryable<TEntity> query = _context.Set<TEntity>();
+
+            if (ignoreQueryFilters)
+                query = query.IgnoreQueryFilters();
+
+            if (include != null)
+                query = include(query);
+
+            if (filter != null)
+                query = query.Where(filter);
+
+            return query.ToList();
         }
 
         public void Update(TEntity entity)

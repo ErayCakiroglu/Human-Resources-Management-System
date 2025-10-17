@@ -11,5 +11,7 @@ namespace HRMS.Business.Abstract
         Result Delete(DeleteDepartmentDTO employee);
         DataResult<DepartmentDetailsDTO> GetById(int id);
         DataResult<List<DepartmentDetailsDTO>> GetAll();
+        DataResult<List<DepartmentDetailsDTO>> GetAllWithDetail();
+
     }
 }

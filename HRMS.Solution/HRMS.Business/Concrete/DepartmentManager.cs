@@ -36,16 +36,33 @@ namespace HRMS.Business.Concrete
 
         public Result Update(UpdateDepartmentDTO department)
         {
-            var updatedDepartment = _departmentDal.Get(d => d.Id == department.Id && !d.IsDeleted);
+            //var updatedDepartment = _departmentDal.Get(d => d.Id == department.Id, ignoreQueryFilters: true);
+            var updatedDepartment = _departmentDal.Get(
+                                        d => d.Id == department.Id,
+                                        include: query => query
+                                        .Include(d => d.DepartmentRoles)
+                                        .ThenInclude(dr => dr.Employees),
+                                        ignoreQueryFilters: true
+                                        );
 
             if (updatedDepartment == null)
                 return new Result(false, Messages.NotFoundMessage("Department"));
+
+            var totalEmployees = updatedDepartment.DepartmentRoles
+                                .SelectMany(dr => dr.Employees)
+                                .Count(e => e.IsActive && !e.IsDeleted);
+
+            if (totalEmployees > 0 && department.IsActive == false)
+                return new Result(false, Messages.DepartmentHasEmployees(updatedDepartment.Name));
 
             if (!string.IsNullOrEmpty(department.Name))
                 updatedDepartment.Name = department.Name;
 
             if (department.IsActive.HasValue)
+            {
                 updatedDepartment.IsActive = department.IsActive.Value;
+                updatedDepartment.IsDeleted = !department.IsActive.Value;
+            }
 
             updatedDepartment.UpdatedAt = DateTime.Now;
 
@@ -56,10 +73,24 @@ namespace HRMS.Business.Concrete
 
         public Result Delete(DeleteDepartmentDTO department)
         {
-            var deletedDepartment = _departmentDal.Get(d => d.Id == department.Id && !d.IsDeleted);
+            //var deletedDepartment = _departmentDal.Get(d => d.Id == department.Id, ignoreQueryFilters: true);
+            var deletedDepartment = _departmentDal.Get(
+                                        d => d.Id == department.Id,
+                                        include: query => query
+                                        .Include(d => d.DepartmentRoles)
+                                        .ThenInclude(dr => dr.Employees),
+                                        ignoreQueryFilters: true
+                                        );
 
             if (deletedDepartment == null)
                 return new Result(false, Messages.NotFoundMessage("Department"));
+
+            var totalEmployees = deletedDepartment.DepartmentRoles
+                                .SelectMany(dr => dr.Employees)
+                                .Count(e => e.IsActive && !e.IsDeleted);
+
+            if (totalEmployees > 0)
+                return new Result(false, Messages.DepartmentHasEmployees(deletedDepartment.Name));
 
             deletedDepartment.IsActive = false;
             deletedDepartment.IsDeleted = true;
@@ -81,6 +112,23 @@ namespace HRMS.Business.Concrete
             return new DataResult<List<DepartmentDetailsDTO>>(departmentDtos, true,
                 Messages.ListedMessage("Departments"));
         }
+
+        public DataResult<List<DepartmentDetailsDTO>> GetAllWithDetail()
+        {
+            var departments = _departmentDal.GetAll(
+                filter: d => !d.IsDeleted,
+                include: query => query
+                    .Include(d => d.DepartmentRoles.Where(dr => !dr.IsDeleted))
+                        .ThenInclude(dr => dr.Role)
+                    .Include(d => d.DepartmentRoles.Where(dr => !dr.IsDeleted))
+                        .ThenInclude(dr => dr.Employees.Where(e => !e.IsDeleted))
+            );
+
+            var dtoList = departments.Select(DepartmentMapper.MapToDetailsDTO).ToList();
+
+            return new DataResult<List<DepartmentDetailsDTO>>(dtoList, true, "Departments with details listed successfully.");
+        }
+
 
         public DataResult<DepartmentDetailsDTO> GetById(int id)
         {

@@ -26,6 +26,16 @@ namespace HRMS.WebAPI.Controllers
             return Ok(result.Data);
         }
 
+        [HttpGet("all-with-details")]
+        public IActionResult GetAllWithDetails()
+        {
+            var result = _departmentService.GetAllWithDetail();
+            if (!result.Success)
+                return BadRequest(result.Message);
+
+            return Ok(result.Data);
+        }
+
         [HttpGet("{id:int}")]
         public IActionResult GetById(int id)
         {

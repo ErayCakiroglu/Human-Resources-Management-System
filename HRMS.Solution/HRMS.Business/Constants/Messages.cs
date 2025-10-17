@@ -16,5 +16,6 @@ namespace HRMS.Business.Constants
         public static string WasBroughtMessage(string input) => $"{input} was retrieved.";
         public static string ListedMessage(string input) => $"{input} listed.";
         public static string AppointMessage(string input) => $"{input} was appointed.";
+        public static string DepartmentHasEmployees(string input) => $"{input} has employees.";
     }
 }
