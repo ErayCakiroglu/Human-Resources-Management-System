@@ -3,11 +3,6 @@ using HRMS.Business.Constants;
 using HRMS.Core.Utilities;
 using HRMS.DataAccess.Abstract;
 using HRMS.Entities.Concrete;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace HRMS.Business.Concrete
 {
@@ -15,12 +10,17 @@ namespace HRMS.Business.Concrete
     {
         private readonly IEmployeeDal _employeeDal;
         private readonly IDepartmentRoleDal _departmentRoleDal;
+        private readonly IEmployeeDepartmentRoleDal _employeeDepartmentRoleDal;
 
-        public DepartmentRelationManager(IEmployeeDal employeeDal, IDepartmentRoleDal departmentRoleDal)
+        public DepartmentRelationManager(IEmployeeDal employeeDal,
+                                         IDepartmentRoleDal departmentRoleDal,
+                                         IEmployeeDepartmentRoleDal employeeDepartmentRoleDal)
         {
             _employeeDal = employeeDal;
             _departmentRoleDal = departmentRoleDal;
+            _employeeDepartmentRoleDal = employeeDepartmentRoleDal;
         }
+
         public Result AssignEmployeeToRole(int employeeId, int departmentRoleId)
         {
             var employee = _employeeDal.Get(e => e.Id == employeeId);
@@ -29,12 +29,28 @@ namespace HRMS.Business.Concrete
 
             var departmentRole = _departmentRoleDal.Get(dr => dr.Id == departmentRoleId);
             if (departmentRole == null)
-                return new Result(false, Messages.NotFoundMessage("Department-role"));
+                return new Result(false, Messages.NotFoundMessage("Department-Role"));
 
-            employee.DepartmentRoleId = departmentRoleId;
-            _employeeDal.Update(employee);
+            var exists = _employeeDepartmentRoleDal.Get(edr =>
+                edr.EmployeeId == employeeId &&
+                edr.DepartmentId == departmentRole.DepartmentId &&
+                edr.RoleId == departmentRole.RoleId &&
+                !edr.IsDeleted);
 
-            return new Result(true, Messages.AppointMessage("Employee, department role"));
+            if (exists != null)
+                return new Result(false, Messages.AlreadyExistsMessage("Employee assignment to this department role"));
+
+
+            var newAssignment = new EmployeeDepartmentRole
+            {
+                EmployeeId = employeeId,
+                DepartmentId = departmentRole.DepartmentId,
+                RoleId = departmentRole.RoleId,
+            };
+
+            _employeeDepartmentRoleDal.Add(newAssignment);
+
+            return new Result(true, Messages.AppointMessage("Employee to department role"));
         }
 
         public Result AssignRolesToDepartment(int departmentId, List<int> roleIds)
@@ -51,8 +67,6 @@ namespace HRMS.Business.Concrete
                 {
                     DepartmentId = departmentId,
                     RoleId = roleId,
-                    IsDeleted = false,
-                    CreatedAt = DateTime.Now
                 });
             }
 

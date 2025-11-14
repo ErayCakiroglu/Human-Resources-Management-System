@@ -1,13 +1,9 @@
 ﻿using HRMS.Entities.Concrete;
 using HRMS.Entities.DTOs.Employee;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace HRMS.Business.Mapping
 {
+
     public static class EmployeeMapper
     {
         public static EmployeeSummaryDTO ToSummaryDto(this Employee e) =>
@@ -19,8 +15,15 @@ namespace HRMS.Business.Mapping
             Email = e.Email,
             PhoneNumber = e.PhoneNumber,
             EmployeeCode = e.EmployeeCode,
-            DepartmentName = e.DepartmentRole?.Department?.Name ?? "",
-            RoleName = e.DepartmentRole?.Role?.RoleName ?? ""
+
+            Positions = e.EmployeeDepartmentRoles
+                .Where(edr => edr.IsActive && !edr.IsDeleted)
+                .Select(edr => new EmployeePositionDTO
+                {
+                    DepartmentName = edr.Department?.Name ?? "",
+                    RoleName = edr.Role?.RoleName ?? ""
+                }).ToList(),
+
         };
 
         public static EmployeeDetailDTO ToDetailDto(this Employee e) =>
@@ -29,13 +32,18 @@ namespace HRMS.Business.Mapping
                 Id = e.Id,
                 FirstName = e.FirstName,
                 LastName = e.LastName,
-                Email = e.Email,
                 PhoneNumber = e.PhoneNumber,
                 HireDate = e.HireDate,
                 EmployeeCode = e.EmployeeCode,
-                DepartmentRoleId = e.DepartmentRoleId,
-                DepartmentName = e.DepartmentRole?.Department?.Name ?? "",
-                RoleName = e.DepartmentRole?.Role?.RoleName ?? "",
+
+                Positions = e.EmployeeDepartmentRoles
+                    .Where(edr => edr.IsActive && !edr.IsDeleted)
+                    .Select(edr => new EmployeePositionDTO
+                    {
+                        DepartmentName = edr.Department?.Name ?? "",
+                        RoleName = edr.Role?.RoleName ?? ""
+                    }).ToList(),
+
                 IsActive = e.IsActive,
                 IsDeleted = e.IsDeleted,
                 CreatedAt = e.CreatedAt,

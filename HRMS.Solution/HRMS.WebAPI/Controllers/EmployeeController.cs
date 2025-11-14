@@ -72,5 +72,14 @@ namespace HRMS.WebAPI.Controllers
                 return BadRequest(result.Message);
             return Ok(result.Message);
         }
+
+        [HttpGet("all-with-details")]
+        public IActionResult GetAllWithDetails()
+        {
+            var result = _employeeService.GetAllWithDetails();
+            if (!result.Success)
+                return BadRequest(result.Message);
+            return Ok(result.Data);
+        }
     }
 }

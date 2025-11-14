@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace HRMS.Business.Constants
+﻿namespace HRMS.Business.Constants
 {
     public static class Messages
     {
@@ -17,5 +11,7 @@ namespace HRMS.Business.Constants
         public static string ListedMessage(string input) => $"{input} listed.";
         public static string AppointMessage(string input) => $"{input} was appointed.";
         public static string DepartmentHasEmployees(string input) => $"{input} has employees.";
+        public static string DepartmentRoleHasActiveEmployees(string departmentName, string roleName)
+            => $"There are active employees in role {roleName} in department {departmentName}.";
     }
 }

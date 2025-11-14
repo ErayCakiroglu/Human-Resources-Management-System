@@ -4,10 +4,13 @@ namespace HRMS.Entities.Concrete
 {
     public class Employee : BaseEntity, IEntity
     {
+        public Employee()
+        {
+            EmployeeDepartmentRoles = new List<EmployeeDepartmentRole>();
+        }
         public int Id { get; set; }
 
-        public int DepartmentRoleId { get; set; }
-        public DepartmentRole? DepartmentRole { get; set; }
+        public ICollection<EmployeeDepartmentRole> EmployeeDepartmentRoles { get; set; }
 
         public int? TerminationReasonId { get; set; }
         public TerminationReason? TerminationReason { get; set; }
@@ -23,8 +26,6 @@ namespace HRMS.Entities.Concrete
         public string? TerminationExplanation { get; set; }
 
         public string EmployeeCode { get; set; } = string.Empty;
-
-        public Department? Department => DepartmentRole?.Department;
 
     }
 }

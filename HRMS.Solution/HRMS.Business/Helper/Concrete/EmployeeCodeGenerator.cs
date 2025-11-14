@@ -1,11 +1,7 @@
 ﻿using HRMS.Business.Helper.Abstract;
 using HRMS.DataAccess.Abstract;
 using HRMS.Entities.DTOs.Employee;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace HRMS.Business.Helper.Concrete
 {
@@ -22,16 +18,24 @@ namespace HRMS.Business.Helper.Concrete
 
         public string GenerateCode(CreateEmployeeDTO dto)
         {
+            if (!dto.DepartmentRoleId.HasValue)
+            {
+                var initialsFallback = $"{dto.FirstName[0]}{dto.LastName[0]}".ToUpper();
+                var yearFallback = dto.HireDate?.Year ?? DateTime.Now.Year;
+                return $"{initialsFallback}-NODEP-{yearFallback}001";
+            }
+
+            var departmentRole = _departmentRoleDal.Get(
+                dr => dr.Id == dto.DepartmentRoleId.Value,
+                include: query => query.Include(dr => dr.Department)
+            );
+
+            var departmentName = departmentRole?.Department?.Name ?? "UNKNOWN";
+
             int count = _employeeDal
-                .GetAll(e =>
-                    e.FirstName == dto.FirstName &&
-                    e.LastName == dto.LastName &&
-                    e.DepartmentRoleId == dto.DepartmentRoleId)
+                .GetAll(e => e.FirstName == dto.FirstName && e.LastName == dto.LastName)
                 .Count;
 
-            var departmentName = _departmentRoleDal
-                .Get(dr => dr.Id == dto.DepartmentRoleId)?
-                .Department?.Name ?? "XXX";
 
             var initials = $"{dto.FirstName[0]}{dto.LastName[0]}".ToUpper();
             var departmentCode = departmentName.Length >= 3

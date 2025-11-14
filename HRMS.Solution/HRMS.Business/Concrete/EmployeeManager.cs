@@ -13,11 +13,18 @@ namespace HRMS.Business.Concrete
     {
         private readonly IEmployeeDal _employeeDal;
         private readonly ICodeGenerator<CreateEmployeeDTO> _codeGenerator;
+        private readonly IDepartmentRoleDal _departmentRoleDal;
+        private readonly IEmployeeDepartmentRoleDal _employeeDepartmentRoleDal;
 
-        public EmployeeManager(IEmployeeDal employeeDal, ICodeGenerator<CreateEmployeeDTO> codeGenerator)
+        public EmployeeManager(IEmployeeDal employeeDal,
+                               ICodeGenerator<CreateEmployeeDTO> codeGenerator,
+                               IDepartmentRoleDal departmentRoleDal,
+                               IEmployeeDepartmentRoleDal employeeDepartmentRoleDal)
         {
             _employeeDal = employeeDal;
             _codeGenerator = codeGenerator;
+            _departmentRoleDal = departmentRoleDal;
+            _employeeDepartmentRoleDal = employeeDepartmentRoleDal;
         }
 
         public Result Add(CreateEmployeeDTO dto)
@@ -32,15 +39,33 @@ namespace HRMS.Business.Concrete
                 Email = dto.Email,
                 PhoneNumber = dto.PhoneNumber,
                 HireDate = dto.HireDate ?? DateTime.Now,
-                DepartmentRoleId = dto.DepartmentRoleId,
                 EmployeeCode = _codeGenerator.GenerateCode(dto),
                 CreatedAt = DateTime.Now,
-                UpdatedAt = DateTime.Now,
                 IsActive = true,
                 IsDeleted = false
             };
 
             _employeeDal.Add(employee);
+
+            if (dto.DepartmentRoleId.HasValue)
+            {
+                var departmentRole = _departmentRoleDal.Get(dr => dr.Id == dto.DepartmentRoleId.Value);
+                if (departmentRole == null)
+                {
+                    return new Result(false, $"Employee added, but initial role (ID: {dto.DepartmentRoleId}) not found.");
+                }
+
+                var newAssignment = new EmployeeDepartmentRole
+                {
+                    EmployeeId = employee.Id,
+                    DepartmentId = departmentRole.DepartmentId,
+                    RoleId = departmentRole.RoleId,
+                    IsActive = true,
+                    CreatedAt = DateTime.Now
+                };
+                _employeeDepartmentRoleDal.Add(newAssignment);
+            }
+
             return new Result(true, Messages.AddedMessage(dto.FirstName + " " + dto.LastName));
         }
 
@@ -50,8 +75,6 @@ namespace HRMS.Business.Concrete
             if (updatedEmployee == null)
                 return new Result(false, Messages.NotFoundMessage("Employee"));
 
-            if (dto.DepartmentRoleId.HasValue)
-                updatedEmployee.DepartmentRoleId = dto.DepartmentRoleId.Value;
 
             if (!string.IsNullOrEmpty(dto.Email))
                 updatedEmployee.Email = dto.Email;

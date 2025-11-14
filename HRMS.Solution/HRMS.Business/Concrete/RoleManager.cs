@@ -44,6 +44,7 @@ namespace HRMS.Business.Concrete
                 return new Result(false, Messages.NotFoundMessage("Role"));
             }
 
+
             deletedRole.IsDeleted = true;
             deletedRole.IsActive = false;
             deletedRole.UpdatedAt = DateTime.Now;
@@ -60,17 +61,29 @@ namespace HRMS.Business.Concrete
             {
                 Id = role.Id,
                 RoleName = role.RoleName,
-                Employees = role.Employees.Select(emp => new EmployeeSummaryDTO
-                {
-                    Id = emp.Id,
-                    FirstName = emp.FirstName,
-                    LastName = emp.LastName,
-                    Email = emp.Email,
-                    PhoneNumber = emp.PhoneNumber,
-                    EmployeeCode = emp.EmployeeCode,
-                    DepartmentName = emp.DepartmentRole?.Department?.Name ?? string.Empty,
-                    RoleName = role.RoleName
-                }).ToList(),
+
+                Employees = role.EmployeeDepartmentRoles
+                    .Where(edr => edr.IsActive && !edr.IsDeleted)
+                    .Select(edr => new EmployeeSummaryDTO
+                    {
+                        Id = edr.Employee.Id,
+                        FirstName = edr.Employee.FirstName,
+                        LastName = edr.Employee.LastName,
+                        Email = edr.Employee.Email,
+                        PhoneNumber = edr.Employee.PhoneNumber,
+                        EmployeeCode = edr.Employee.EmployeeCode,
+
+                        Positions = new List<EmployeePositionDTO>
+                        {
+                    new EmployeePositionDTO
+                    {
+                        DepartmentName = edr.Department?.Name ?? string.Empty,
+                        RoleName = role.RoleName,
+                        EmployeeDepartmentRoleId = edr.Id
+                    }
+                        }
+                    }).ToList(),
+
                 DepartmentNames = role.DepartmentRoles.Select(dr => dr.Department?.Name ?? string.Empty).ToList()
             }).ToList();
 
@@ -80,25 +93,34 @@ namespace HRMS.Business.Concrete
         public DataResult<RoleDetailDTO> GetById(int id)
         {
             var role = _roleDal.GetWithDetails(r => r.Id == id);
+
             if (role == null)
+            {
                 return new DataResult<RoleDetailDTO>(null, false, Messages.NotFoundMessage("Role"));
+            }
 
             var dto = new RoleDetailDTO
             {
                 Id = role.Id,
                 RoleName = role.RoleName,
+
                 DepartmentNames = role.DepartmentRoles.Select(dr => dr.Department?.Name ?? string.Empty).ToList(),
-                Employees = role.Employees.Select(e => new EmployeeSummaryDTO
-                {
-                    Id = e.Id,
-                    FirstName = e.FirstName,
-                    LastName = e.LastName,
-                    Email = e.Email,
-                    PhoneNumber = e.PhoneNumber,
-                    EmployeeCode = e.EmployeeCode,
-                    DepartmentName = e.DepartmentRole?.Department?.Name ?? string.Empty,
-                    RoleName = role.RoleName
-                }).ToList()
+
+                Employees = role.EmployeeDepartmentRoles
+                    .Where(edr => edr.IsActive && !edr.IsDeleted)
+                    .Select(edr => new EmployeeSummaryDTO
+                    {
+
+                        Positions = new List<EmployeePositionDTO>
+                        {
+                    new EmployeePositionDTO
+                    {
+                        DepartmentName = edr.Department?.Name ?? string.Empty,
+                        RoleName = role.RoleName,
+                        EmployeeDepartmentRoleId = edr.Id
+                    }
+                        }
+                    }).ToList()
             };
 
             return new DataResult<RoleDetailDTO>(dto, true, Messages.WasBroughtMessage(role.RoleName));

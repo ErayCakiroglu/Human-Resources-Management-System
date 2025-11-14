@@ -1,9 +1,6 @@
 ﻿using HRMS.Entities.Abstract;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace HRMS.Entities.DTOs.Employee
 {
@@ -17,10 +14,7 @@ namespace HRMS.Entities.DTOs.Employee
         public string PhoneNumber { get; set; } = string.Empty;
         public DateTime HireDate { get; set; }
         public string EmployeeCode { get; set; } = string.Empty;
-
-        public int DepartmentRoleId { get; set; }
-        public string DepartmentName { get; set; } = string.Empty;
-        public string RoleName { get; set; } = string.Empty;
+        public ICollection<EmployeePositionDTO> Positions { get; set; } = new List<EmployeePositionDTO>();
 
         public int? TerminationReasonId { get; set; }
         public string? TerminationReasonDescription { get; set; }

@@ -15,6 +15,8 @@ namespace HRMS.DataAccess.Concrete
         public DbSet<Role> Roles { get; set; } = null!;
         public DbSet<DepartmentRole> DepartmentRoles { get; set; } = null!;
         public DbSet<TerminationReason> TerminationReasons { get; set; } = null!;
+        public DbSet<EmployeeDepartmentRole> EmployeeDepartmentRoles { get; set; } = null!;
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -30,20 +32,37 @@ namespace HRMS.DataAccess.Concrete
             modelBuilder.Entity<DepartmentRole>()
                 .HasQueryFilter(dr => dr.IsActive && !dr.IsDeleted);
 
+            modelBuilder.Entity<EmployeeDepartmentRole>()
+                .HasQueryFilter(edr => edr.IsActive && !edr.IsDeleted);
+
             modelBuilder.Entity<TerminationReason>()
                 .HasQueryFilter(tr => tr.IsActive && !tr.IsDeleted);
 
-            modelBuilder.Entity<Employee>()
-                .HasOne(e => e.DepartmentRole)
-                .WithMany(dr => dr.Employees)
-                .HasForeignKey(e => e.DepartmentRoleId)
-                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<EmployeeDepartmentRole>()
+                .HasOne(edr => edr.Employee)
+                .WithMany(e => e.EmployeeDepartmentRoles)
+                .HasForeignKey(edr => edr.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<EmployeeDepartmentRole>()
+                .HasOne(edr => edr.Department)
+                .WithMany(d => d.EmployeeDepartmentRoles)
+                .HasForeignKey(edr => edr.DepartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<EmployeeDepartmentRole>()
+                .HasOne(edr => edr.Role)
+                .WithMany(r => r.EmployeeDepartmentRoles)
+                .HasForeignKey(edr => edr.RoleId)
+                .OnDelete(DeleteBehavior.Restrict);
+
 
             modelBuilder.Entity<Employee>()
                 .HasOne(e => e.TerminationReason)
                 .WithMany(tr => tr.Employees)
                 .HasForeignKey(e => e.TerminationReasonId)
-                .OnDelete(DeleteBehavior.NoAction);
+                .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<Employee>()
                 .HasIndex(e => e.EmployeeCode)

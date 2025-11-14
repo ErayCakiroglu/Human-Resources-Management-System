@@ -3,34 +3,34 @@ using HRMS.Business.Constants;
 using HRMS.Business.Mapping;
 using HRMS.Core.Utilities;
 using HRMS.DataAccess.Abstract;
-using HRMS.Entities.Abstract;
-using HRMS.Entities.Concrete;
 using HRMS.Entities.DTOs.DepartmentRole;
-using System.Data;
 
 namespace HRMS.Business.Concrete
 {
     public class DepartmentRoleManager : IDepartmentRoleService
     {
         private readonly IDepartmentRoleDal _departmentRoleDal;
+        private readonly IEmployeeDepartmentRoleDal _employeeDepartmentRoleDal;
 
-        public DepartmentRoleManager(IDepartmentRoleDal departmentRoleDal)
+        public DepartmentRoleManager(IDepartmentRoleDal departmentRoleDal, IEmployeeDepartmentRoleDal employeeDepartmentRoleDal) // Ctor güncellendi
         {
             _departmentRoleDal = departmentRoleDal;
+            _employeeDepartmentRoleDal = employeeDepartmentRoleDal;
         }
+
         public Result Add(CreateDepartmentRoleDTO departmentRoleDTO)
         {
             if (_departmentRoleDal.Any(dr => dr.DepartmentId == departmentRoleDTO.DepartmentId &&
-                                             dr.RoleId == departmentRoleDTO.RoleId &&
-                                             !dr.IsDeleted))
+                                            dr.RoleId == departmentRoleDTO.RoleId &&
+                                            !dr.IsDeleted))
                 return new Result(false, Messages.AlreadyExistsMessage($"DepartmentId: {departmentRoleDTO.DepartmentId}," +
-                    $"RoleId: {departmentRoleDTO.RoleId}"));
+                                                                      $"RoleId: {departmentRoleDTO.RoleId}"));
 
             var entity = departmentRoleDTO.ToEntity();
             _departmentRoleDal.Add(entity);
 
             return new Result(true, Messages.AddedMessage($"DepartmentId: {departmentRoleDTO.DepartmentId}," +
-                $"RoleId: {departmentRoleDTO.RoleId}"));
+                                                         $"RoleId: {departmentRoleDTO.RoleId}"));
         }
 
         public Result Update(UpdateDepartmentRoleDTO departmentRoleDTO)
@@ -51,6 +51,16 @@ namespace HRMS.Business.Concrete
 
             if (entity == null)
                 return new Result(false, Messages.NotFoundMessage($"DepartmentRole Id: {departmentRoleDTO.Id}"));
+
+            var activeAssignments = _employeeDepartmentRoleDal.Any(edr =>
+                edr.DepartmentId == entity.DepartmentId &&
+                edr.RoleId == entity.RoleId &&
+                !edr.IsDeleted);
+
+            if (activeAssignments)
+            {
+                return new Result(false, Messages.DepartmentRoleHasActiveEmployees(entity.Department?.Name, entity.Role?.RoleName));
+            }
 
             entity.IsDeleted = true;
             entity.IsActive = false;

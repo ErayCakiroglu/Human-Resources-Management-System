@@ -6,12 +6,12 @@ namespace HRMS.Entities.Concrete
     {
         public Role()
         {
-            Employees = new List<Employee>();
             DepartmentRoles = new List<DepartmentRole>();
+            EmployeeDepartmentRoles = new List<EmployeeDepartmentRole>();
         }
         public int Id { get; set; }
         public string RoleName { get; set; } = string.Empty;
-        public ICollection<Employee> Employees { get; set; }
         public ICollection<DepartmentRole> DepartmentRoles { get; set; }
+        public ICollection<EmployeeDepartmentRole> EmployeeDepartmentRoles { get; set; }
     }
 }

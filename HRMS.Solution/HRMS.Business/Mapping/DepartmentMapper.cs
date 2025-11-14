@@ -29,25 +29,36 @@ namespace HRMS.Business.Mapping
                         RoleName = departmentRole.Role.RoleName
                     });
                 }
+            }
 
-                foreach (var employee in departmentRole.Employees)
+            var distinctEmployees = department.EmployeeDepartmentRoles
+                .Where(edr => edr.Employee != null && !edr.IsDeleted && !edr.Employee.IsDeleted)
+                .GroupBy(edr => edr.Employee.Id)
+                .Select(g => g.First().Employee)
+                .ToList();
+
+            foreach (var employee in distinctEmployees)
+            {
+                var employeePositionsInDept = department.EmployeeDepartmentRoles
+                   .Where(edr => edr.EmployeeId == employee.Id && !edr.IsDeleted && edr.IsActive)
+                   .ToList();
+
+                dto.Employees.Add(new EmployeeSummaryDTO
                 {
-                    if (!employee.IsDeleted)
+                    Id = employee.Id,
+                    FirstName = employee.FirstName,
+                    LastName = employee.LastName,
+                    Email = employee.Email,
+                    PhoneNumber = employee.PhoneNumber,
+                    EmployeeCode = employee.EmployeeCode,
+
+                    Positions = employeePositionsInDept.Select(edr => new EmployeePositionDTO
                     {
-                        dto.Employees.Add(new EmployeeSummaryDTO
-                        {
-                            Id = employee.Id,
-                            FirstName = employee.FirstName,
-                            LastName = employee.LastName,
-                            Email = employee.Email,
-                            PhoneNumber = employee.PhoneNumber,
-                            EmployeeCode = employee.EmployeeCode,
-                            DepartmentName = department.Name,
-                            RoleName = departmentRole.Role?.RoleName ?? "",
-                            DepartmentRoleId = departmentRole.Id
-                        });
-                    }
-                }
+                        DepartmentName = department.Name,
+                        RoleName = edr.Role?.RoleName ?? string.Empty,
+                        EmployeeDepartmentRoleId = edr.Id
+                    }).ToList()
+                });
             }
 
             return dto;

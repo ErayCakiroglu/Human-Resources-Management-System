@@ -12,6 +12,7 @@ namespace HRMS.Business.Concrete
     public class DepartmentManager : IDepartmentService
     {
         private readonly IDepartmentDal _departmentDal;
+
         public DepartmentManager(IDepartmentDal departmentDal)
         {
             _departmentDal = departmentDal;
@@ -34,23 +35,30 @@ namespace HRMS.Business.Concrete
             return new Result(true, Messages.AddedMessage(newDepartment.Name));
         }
 
+        public DataResult<List<DepartmentDetailsDTO>> GetAll()
+        {
+            var departments = _departmentDal.GetAll(d => !d.IsDeleted);
+
+            var departmentDtos = departments.Select(DepartmentMapper.MapToDetailsDTO).ToList();
+
+            return new DataResult<List<DepartmentDetailsDTO>>(departmentDtos, true,
+                Messages.ListedMessage("Departments"));
+        }
+
         public Result Update(UpdateDepartmentDTO department)
         {
-            //var updatedDepartment = _departmentDal.Get(d => d.Id == department.Id, ignoreQueryFilters: true);
             var updatedDepartment = _departmentDal.Get(
-                                        d => d.Id == department.Id,
-                                        include: query => query
-                                        .Include(d => d.DepartmentRoles)
-                                        .ThenInclude(dr => dr.Employees),
-                                        ignoreQueryFilters: true
-                                        );
+                                            d => d.Id == department.Id,
+                                            include: query => query
+                                                .Include(d => d.EmployeeDepartmentRoles),
+                                            ignoreQueryFilters: true
+                                            );
 
             if (updatedDepartment == null)
                 return new Result(false, Messages.NotFoundMessage("Department"));
 
-            var totalEmployees = updatedDepartment.DepartmentRoles
-                                .SelectMany(dr => dr.Employees)
-                                .Count(e => e.IsActive && !e.IsDeleted);
+            var totalEmployees = updatedDepartment.EmployeeDepartmentRoles
+                                        .Count(edr => edr.IsActive && !edr.IsDeleted);
 
             if (totalEmployees > 0 && department.IsActive == false)
                 return new Result(false, Messages.DepartmentHasEmployees(updatedDepartment.Name));
@@ -73,44 +81,32 @@ namespace HRMS.Business.Concrete
 
         public Result Delete(DeleteDepartmentDTO department)
         {
-            //var deletedDepartment = _departmentDal.Get(d => d.Id == department.Id, ignoreQueryFilters: true);
             var deletedDepartment = _departmentDal.Get(
-                                        d => d.Id == department.Id,
-                                        include: query => query
-                                        .Include(d => d.DepartmentRoles)
-                                        .ThenInclude(dr => dr.Employees),
-                                        ignoreQueryFilters: true
-                                        );
+                                            d => d.Id == department.Id,
+                                            include: query => query
+                                                .Include(d => d.EmployeeDepartmentRoles),
+                                            ignoreQueryFilters: true
+                                            );
 
             if (deletedDepartment == null)
                 return new Result(false, Messages.NotFoundMessage("Department"));
 
-            var totalEmployees = deletedDepartment.DepartmentRoles
-                                .SelectMany(dr => dr.Employees)
-                                .Count(e => e.IsActive && !e.IsDeleted);
+            var totalEmployees = deletedDepartment.EmployeeDepartmentRoles
+                                        .Count(edr => edr.IsActive && !edr.IsDeleted);
 
             if (totalEmployees > 0)
                 return new Result(false, Messages.DepartmentHasEmployees(deletedDepartment.Name));
 
             deletedDepartment.IsActive = false;
             deletedDepartment.IsDeleted = true;
-            deletedDepartment.DeletedBy = department.DeletedBy;
+
+
             deletedDepartment.DeletionReason = department.Reason;
             deletedDepartment.UpdatedAt = DateTime.Now;
 
             _departmentDal.Update(deletedDepartment);
 
             return new Result(true, Messages.DeletedMessage(deletedDepartment.Name));
-        }
-
-        public DataResult<List<DepartmentDetailsDTO>> GetAll()
-        {
-            var departments = _departmentDal.GetAll(d => !d.IsDeleted);
-
-            var departmentDtos = departments.Select(DepartmentMapper.MapToDetailsDTO).ToList();
-
-            return new DataResult<List<DepartmentDetailsDTO>>(departmentDtos, true,
-                Messages.ListedMessage("Departments"));
         }
 
         public DataResult<List<DepartmentDetailsDTO>> GetAllWithDetail()
@@ -120,15 +116,14 @@ namespace HRMS.Business.Concrete
                 include: query => query
                     .Include(d => d.DepartmentRoles.Where(dr => !dr.IsDeleted))
                         .ThenInclude(dr => dr.Role)
-                    .Include(d => d.DepartmentRoles.Where(dr => !dr.IsDeleted))
-                        .ThenInclude(dr => dr.Employees.Where(e => !e.IsDeleted))
+                    .Include(d => d.EmployeeDepartmentRoles.Where(edr => !edr.IsDeleted))
+                        .ThenInclude(edr => edr.Employee)
             );
 
             var dtoList = departments.Select(DepartmentMapper.MapToDetailsDTO).ToList();
 
             return new DataResult<List<DepartmentDetailsDTO>>(dtoList, true, "Departments with details listed successfully.");
         }
-
 
         public DataResult<DepartmentDetailsDTO> GetById(int id)
         {
@@ -137,8 +132,8 @@ namespace HRMS.Business.Concrete
                 include: query => query
                     .Include(d => d.DepartmentRoles.Where(dr => !dr.IsDeleted))
                         .ThenInclude(dr => dr.Role)
-                    .Include(d => d.DepartmentRoles.Where(dr => !dr.IsDeleted))
-                        .ThenInclude(dr => dr.Employees.Where(e => !e.IsDeleted))
+                    .Include(d => d.EmployeeDepartmentRoles.Where(edr => !edr.IsDeleted))
+                        .ThenInclude(edr => edr.Employee)
             );
 
             if (department == null)

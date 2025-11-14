@@ -12,18 +12,24 @@ namespace HRMS.DataAccess.Concrete.EntityFramework
         public List<Role> GetAllWithEmployees()
         {
             return _context.Roles
-                .Include(r => r.Employees)
-                    .ThenInclude(e => e.DepartmentRole)
-                        .ThenInclude(dr => dr.Department)
+                .Include(r => r.EmployeeDepartmentRoles)
+                    .ThenInclude(edr => edr.Employee)
                 .ToList();
         }
 
         public Role? GetWithDetails(Expression<Func<Role, bool>> filter)
         {
             return _context.Roles
-                .Include(r => r.Employees)
                 .Include(r => r.DepartmentRoles)
                     .ThenInclude(dr => dr.Department)
+
+                .Include(r => r.EmployeeDepartmentRoles)
+                    .ThenInclude(edr => edr.Employee)
+
+                .Include(r => r.EmployeeDepartmentRoles)
+                    .ThenInclude(edr => edr.Employee)
+                        .ThenInclude(e => e.TerminationReason)
+
                 .FirstOrDefault(filter);
         }
     }
